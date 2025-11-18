@@ -1,12 +1,12 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useLayoutEffect } from "react";
 import {
   View,
   Text,
-  TextInput,
-  Button,
-  FlatList,
   StyleSheet,
   Alert,
+  TouchableOpacity,
+  KeyboardAvoidingView,
+  Platform,
 } from "react-native";
 import {
   addDoc,
@@ -14,7 +14,10 @@ import {
   query,
   orderBy,
   onSnapshot,
+  auth,
+  signOut,
 } from "../firebase";
+import { clearAuthUser } from "../utils/authStorage";
 import { messagesCollection } from "../firebase";
 import { NativeStackScreenProps } from "@react-navigation/native-stack";
 import { RootStackParamList } from "../App";
@@ -23,21 +26,30 @@ import {
   getMessagesFromLocal,
   LocalMessage,
 } from "../utils/localStorage";
-
-type MessageType = {
-  id: string;
-  text: string;
-  user: string;
-  createdAt: { seconds: number; nanoseconds: number } | null;
-};
+import MessageList, { Message } from "../components/MessageList";
+import ChatInputBar from "../components/ChatInputBar";
+import OfflineBanner from "../components/OfflineBanner";
 
 type Props = NativeStackScreenProps<RootStackParamList, "Chat">;
 
-export default function ChatScreen({ route }: Props) {
+export default function ChatScreen({ route, navigation }: Props) {
   const { name } = route.params;
   const [message, setMessage] = useState<string>("");
-  const [messages, setMessages] = useState<MessageType[]>([]);
+  const [messages, setMessages] = useState<Message[]>([]);
   const [isOnline, setIsOnline] = useState<boolean>(true);
+
+  // Add logout button to header
+  useLayoutEffect(() => {
+    navigation.setOptions({
+      headerRight: () => (
+        <TouchableOpacity onPress={handleLogout}>
+          <Text style={{ color: "#007AFF", fontSize: 16, marginRight: 10 }}>
+            Logout
+          </Text>
+        </TouchableOpacity>
+      ),
+    });
+  }, [navigation]);
 
   // Load messages from local storage on mount
   useEffect(() => {
@@ -50,11 +62,11 @@ export default function ChatScreen({ route }: Props) {
     const unsub = onSnapshot(
       q,
       (snapshot) => {
-        const list: MessageType[] = [];
+        const list: Message[] = [];
         snapshot.forEach((doc) => {
           list.push({
             id: doc.id,
-            ...(doc.data() as Omit<MessageType, "id">),
+            ...(doc.data() as Omit<Message, "id">),
           });
         });
         setMessages(list);
@@ -65,6 +77,7 @@ export default function ChatScreen({ route }: Props) {
           id: msg.id,
           text: msg.text,
           user: msg.user,
+          userId: msg.userId,
           createdAt: msg.createdAt?.seconds
             ? msg.createdAt.seconds * 1000
             : Date.now(),
@@ -79,29 +92,64 @@ export default function ChatScreen({ route }: Props) {
     return () => unsub();
   }, []);
 
-  const loadLocalMessages = async () => {
-    const localMessages = await getMessagesFromLocal();
+  const loadLocalMessages = () => {
+    const localMessages = getMessagesFromLocal();
     if (localMessages.length > 0) {
-      const formattedMessages: MessageType[] = localMessages.map((msg) => ({
+      const mapped: Message[] = localMessages.map((msg) => ({
         id: msg.id,
         text: msg.text,
         user: msg.user,
+        userId: msg.userId,
         createdAt: {
           seconds: Math.floor(msg.createdAt / 1000),
           nanoseconds: 0,
-        },
+        } as any,
       }));
-      setMessages(formattedMessages);
+      setMessages(mapped);
     }
+  };
+
+  const handleLogout = async () => {
+    Alert.alert("Logout", "Are you sure you want to logout?", [
+      { text: "Cancel", style: "cancel" },
+      {
+        text: "Logout",
+        style: "destructive",
+        onPress: async () => {
+          try {
+            // Clear MMKV auth storage
+            clearAuthUser();
+            
+            // Sign out from Firebase
+            await signOut(auth);
+            
+            navigation.reset({
+              index: 0,
+              routes: [{ name: "Login" }],
+            });
+          } catch (error) {
+            Alert.alert("Error", "Gagal logout");
+            console.error("Logout error:", error);
+          }
+        },
+      },
+    ]);
   };
 
   const sendMessage = async () => {
     if (!message.trim()) return;
 
+    const currentUser = auth.currentUser;
+    if (!currentUser) {
+      Alert.alert("Error", "User tidak terautentikasi");
+      return;
+    }
+
     try {
       await addDoc(messagesCollection, {
         text: message,
         user: name,
+        userId: currentUser.uid,
         createdAt: serverTimestamp(),
       });
       setMessage("");
@@ -111,84 +159,22 @@ export default function ChatScreen({ route }: Props) {
     }
   };
 
-  const renderItem = ({ item }: { item: MessageType }) => (
-    <View
-      style={[
-        styles.msgBox,
-        item.user === name ? styles.myMsg : styles.otherMsg,
-      ]}
-    >
-      <Text style={styles.sender}>{item.user}</Text>
-      <Text>{item.text}</Text>
-    </View>
-  );
-
   return (
-    <View style={{ flex: 1 }}>
-      {!isOnline && (
-        <View style={styles.offlineBanner}>
-          <Text style={styles.offlineText}>📴 Mode Offline</Text>
-        </View>
-      )}
-      <FlatList
-        data={messages}
-        keyExtractor={(item) => item.id}
-        renderItem={renderItem}
-        contentContainerStyle={{ padding: 10 }}
-      />
-      <View style={styles.inputRow}>
-        <TextInput
-          style={styles.input}
-          placeholder="Ketik pesan..."
-          value={message}
-          onChangeText={setMessage}
-        />
-        <Button title="Kirim" onPress={sendMessage} />
-      </View>
-    </View>
+    <KeyboardAvoidingView
+      style={styles.container}
+      behavior={Platform.OS === "ios" ? "padding" : undefined}
+      keyboardVerticalOffset={Platform.OS === "ios" ? 90 : 0}
+    >
+      <OfflineBanner isOnline={isOnline} />
+      <MessageList messages={messages} currentUserId={auth.currentUser?.uid || ""} />
+      <ChatInputBar message={message} onChangeText={setMessage} onSend={sendMessage} />
+    </KeyboardAvoidingView>
   );
 }
 
 const styles = StyleSheet.create({
-  offlineBanner: {
-    backgroundColor: "#ff6b6b",
-    padding: 8,
-    alignItems: "center",
-  },
-  offlineText: {
-    color: "white",
-    fontWeight: "bold",
-  },
-  msgBox: {
-    padding: 10,
-    marginVertical: 6,
-    borderRadius: 6,
-    maxWidth: "80%",
-  },
-  myMsg: {
-    backgroundColor: "#d1f0ff",
-    alignSelf: "flex-end",
-  },
-  otherMsg: {
-    backgroundColor: "#eee",
-    alignSelf: "flex-start",
-  },
-  sender: {
-    fontWeight: "bold",
-    marginBottom: 2,
-    fontSize: 12,
-  },
-  inputRow: {
-    flexDirection: "row",
-    padding: 10,
-    borderTopWidth: 1,
-    borderColor: "#ccc",
-  },
-  input: {
+  container: {
     flex: 1,
-    borderWidth: 1,
-    marginRight: 10,
-    padding: 8,
-    borderRadius: 6,
+    backgroundColor: "#EFEAE2",
   },
 });

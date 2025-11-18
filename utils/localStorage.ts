@@ -1,35 +1,36 @@
-import AsyncStorage from "@react-native-async-storage/async-storage";
+import { storage } from "../firebase";
 
 export type LocalMessage = {
   id: string;
   text: string;
   user: string;
+  userId: string;
   createdAt: number;
 };
 
-const MESSAGES_KEY = "@chat_messages";
+const MESSAGES_KEY = "chat_messages";
 
-export const saveMessagesToLocal = async (messages: LocalMessage[]) => {
+export const saveMessagesToLocal = (messages: LocalMessage[]) => {
   try {
-    await AsyncStorage.setItem(MESSAGES_KEY, JSON.stringify(messages));
+    storage.set(MESSAGES_KEY, JSON.stringify(messages));
   } catch (error) {
-    console.error("Error saving messages to local storage:", error);
+    console.error("Error saving messages to MMKV storage:", error);
   }
 };
 
-export const getMessagesFromLocal = async (): Promise<LocalMessage[]> => {
+export const getMessagesFromLocal = (): LocalMessage[] => {
   try {
-    const data = await AsyncStorage.getItem(MESSAGES_KEY);
+    const data = storage.getString(MESSAGES_KEY);
     return data ? JSON.parse(data) : [];
   } catch (error) {
-    console.error("Error getting messages from local storage:", error);
+    console.error("Error getting messages from MMKV storage:", error);
     return [];
   }
 };
 
-export const clearLocalMessages = async () => {
+export const clearLocalMessages = () => {
   try {
-    await AsyncStorage.removeItem(MESSAGES_KEY);
+    storage.remove(MESSAGES_KEY);
   } catch (error) {
     console.error("Error clearing local messages:", error);
   }

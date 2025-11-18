@@ -12,9 +12,13 @@ import {
 } from "firebase/firestore";
 import {
   getAuth,
-  signInAnonymously,
+  createUserWithEmailAndPassword,
+  signInWithEmailAndPassword,
   onAuthStateChanged,
+  updateProfile,
+  signOut,
 } from "firebase/auth";
+import { createMMKV } from "react-native-mmkv";
 
 const firebaseConfig = {
   apiKey: "AIzaSyD7c2lNMscIxy-2evVvaHnnyL4HAJKZue0",
@@ -26,8 +30,17 @@ const firebaseConfig = {
 };
 
 const app = initializeApp(firebaseConfig);
-const auth = getAuth(app);
 const db = getFirestore(app);
+
+// Initialize MMKV storage untuk app data (messages, etc)
+export const storage = createMMKV({
+  id: "chatapp-storage",
+  encryptionKey: "chatapp-secure-key-2024",
+});
+
+// Initialize Auth - Firebase akan handle auth state persistence secara internal
+// Warning bisa diabaikan karena kita sudah handle persistence dengan onAuthStateChanged
+const auth = getAuth(app);
 
 export const messagesCollection = collection(
   db,
@@ -43,6 +56,9 @@ export {
   query,
   orderBy,
   onSnapshot,
-  signInAnonymously,
+  createUserWithEmailAndPassword,
+  signInWithEmailAndPassword,
   onAuthStateChanged,
+  updateProfile,
+  signOut,
 };
