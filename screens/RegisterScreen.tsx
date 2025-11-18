@@ -12,13 +12,11 @@ import {
 import { NativeStackScreenProps } from "@react-navigation/native-stack";
 import { RootStackParamList } from "../App";
 import {
-  auth,
-  createUserWithEmailAndPassword,
-  updateProfile,
-  db,
-} from "../firebase";
-import { doc, setDoc } from "firebase/firestore";
-import { saveAuthUser } from "../utils/authStorage";
+  registerUser,
+  validateEmail,
+  validateFullName,
+  validatePhone,
+} from "../services/authService";
 import LogoContainer from "../components/LogoContainer";
 import CustomInput from "../components/ui/CustomInput";
 import CustomButton from "../components/ui/CustomButton";
@@ -33,21 +31,6 @@ export default function RegisterScreen({ navigation }: Props) {
   const [password, setPassword] = useState<string>("");
   const [confirmPassword, setConfirmPassword] = useState<string>("");
   const [loading, setLoading] = useState<boolean>(false);
-
-  const validateEmail = (email: string) => {
-    const re = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    return re.test(email);
-  };
-
-  const validateFullName = (name: string) => {
-    const re = /^[a-zA-Z\s]+$/;
-    return re.test(name);
-  };
-
-  const validatePhone = (phone: string) => {
-    const re = /^[0-9]{10,15}$/;
-    return re.test(phone);
-  };
 
   const handleRegister = async () => {
     // Validasi input
@@ -83,61 +66,25 @@ export default function RegisterScreen({ navigation }: Props) {
 
     setLoading(true);
 
-    try {
-      // Buat user di Firebase Authentication
-      const userCredential = await createUserWithEmailAndPassword(
-        auth,
-        email.trim(),
-        password
-      );
+    const result = await registerUser({
+      fullName: fullName.trim(),
+      username: username.trim(),
+      phone: phone.trim(),
+      email: email.trim(),
+      password,
+    });
 
-      // Update display name
-      await updateProfile(userCredential.user, {
-        displayName: username.trim(),
-      });
+    setLoading(false);
 
-      // Simpan data user lengkap ke Firestore
-      await setDoc(doc(db, "users", userCredential.user.uid), {
-        fullName: fullName.trim(),
-        username: username.trim(),
-        phone: phone.trim(),
-        email: email.trim(),
-        createdAt: new Date().toISOString(),
-        userId: userCredential.user.uid,
-      });
-
-      // Get auth token
-      const token = await userCredential.user.getIdToken();
-
-      // Simpan user data ke MMKV untuk auto-login
-      saveAuthUser({
-        uid: userCredential.user.uid,
-        email: userCredential.user.email || email,
-        displayName: username.trim(),
-        token: token,
-      });
-
-      // Langsung masuk ke ChatScreen
+    if (result.success) {
       Alert.alert("Berhasil", "Akun berhasil dibuat!", [
         {
           text: "OK",
-          onPress: () => navigation.replace("Chat", { name: username.trim() }),
+          onPress: () => navigation.replace("Chat", { name: fullName.trim() }),
         },
       ]);
-    } catch (error: any) {
-      let errorMessage = "Terjadi kesalahan";
-      if (error.code === "auth/email-already-in-use") {
-        errorMessage = "Email sudah digunakan. Silakan gunakan email lain.";
-      } else if (error.code === "auth/invalid-email") {
-        errorMessage = "Format email tidak valid";
-      } else if (error.code === "auth/weak-password") {
-        errorMessage = "Password terlalu lemah";
-      } else if (error.code === "auth/network-request-failed") {
-        errorMessage = "Tidak ada koneksi internet";
-      }
-      Alert.alert("Error", errorMessage);
-    } finally {
-      setLoading(false);
+    } else {
+      Alert.alert("Error", result.error || "Terjadi kesalahan saat registrasi");
     }
   };
 

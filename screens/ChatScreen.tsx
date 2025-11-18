@@ -15,9 +15,7 @@ import {
   orderBy,
   onSnapshot,
   auth,
-  signOut,
 } from "../firebase";
-import { clearAuthUser } from "../utils/authStorage";
 import { messagesCollection } from "../firebase";
 import { NativeStackScreenProps } from "@react-navigation/native-stack";
 import { RootStackParamList } from "../App";
@@ -26,6 +24,7 @@ import {
   getMessagesFromLocal,
   LocalMessage,
 } from "../utils/localStorage";
+import { logoutUser } from "../services/authService";
 import MessageList, { Message } from "../components/MessageList";
 import ChatInputBar from "../components/ChatInputBar";
 import OfflineBanner from "../components/OfflineBanner";
@@ -116,20 +115,15 @@ export default function ChatScreen({ route, navigation }: Props) {
         text: "Logout",
         style: "destructive",
         onPress: async () => {
-          try {
-            // Clear MMKV auth storage
-            clearAuthUser();
-            
-            // Sign out from Firebase
-            await signOut(auth);
-            
+          const result = await logoutUser();
+          
+          if (result.success) {
             navigation.reset({
               index: 0,
               routes: [{ name: "Login" }],
             });
-          } catch (error) {
-            Alert.alert("Error", "Gagal logout");
-            console.error("Logout error:", error);
+          } else {
+            Alert.alert("Error", result.error || "Gagal logout");
           }
         },
       },

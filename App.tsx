@@ -1,13 +1,11 @@
-import React, { useEffect, useState } from "react";
+import React from "react";
 import { NavigationContainer } from "@react-navigation/native";
 import { createNativeStackNavigator } from "@react-navigation/native-stack";
 import LoginScreen from "./screens/LoginScreen";
 import RegisterScreen from "./screens/RegisterScreen";
 import ChatScreen from "./screens/ChatScreen";
-import { auth, onAuthStateChanged } from "./firebase";
-import { User } from "firebase/auth";
 import { ActivityIndicator, View } from "react-native";
-import { getAuthUser, StoredUser } from "./utils/authStorage";
+import { useAuth } from "./hooks/useAuth";
 
 export type RootStackParamList = {
   Login: undefined;
@@ -18,39 +16,16 @@ export type RootStackParamList = {
 const Stack = createNativeStackNavigator<RootStackParamList>();
 
 export default function App() {
-  const [user, setUser] = useState<User | null>(null);
-  const [loading, setLoading] = useState<boolean>(true);
-  const [userName, setUserName] = useState<string>("");
-
-  useEffect(() => {
-    // Firebase Auth akan otomatis restore session jika ada
-    // MMKV hanya untuk menyimpan display name
-    const storedUser = getAuthUser();
-    if (storedUser) {
-      setUserName(storedUser.displayName);
-    }
-
-    const unsub = onAuthStateChanged(auth, (u) => {
-      setUser(u);
-      setLoading(false);
-      
-      // Update userName dari Firebase user jika ada
-      if (u && u.displayName) {
-        setUserName(u.displayName);
-      }
-    });
-    return () => unsub();
-  }, []);
+  const { user, loading, userName } = useAuth();
 
   if (loading) {
     return (
-      <View style={{ flex: 1, justifyContent: "center", alignItems: "center" }}>
-        <ActivityIndicator size="large" color="#007AFF" />
+      <View style={{ flex: 1, justifyContent: "center", alignItems: "center", backgroundColor: "#EDEDED" }}>
+        <ActivityIndicator size="large" color="#25D366" />
       </View>
     );
   }
 
-  // Hanya pakai Firebase auth state, bukan MMKV
   const initialRoute = user ? "Chat" : "Login";
   const chatName = userName || user?.displayName || "User";
 

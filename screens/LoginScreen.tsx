@@ -11,13 +11,7 @@ import {
 } from "react-native";
 import { NativeStackScreenProps } from "@react-navigation/native-stack";
 import { RootStackParamList } from "../App";
-import {
-  auth,
-  signInWithEmailAndPassword,
-  db,
-} from "../firebase";
-import { doc, getDoc } from "firebase/firestore";
-import { saveAuthUser } from "../utils/authStorage";
+import { loginUser, validateEmail } from "../services/authService";
 import AuthHeader from "../components/AuthHeader";
 import LogoContainer from "../components/LogoContainer";
 import CustomInput from "../components/ui/CustomInput";
@@ -29,11 +23,6 @@ export default function LoginScreen({ navigation }: Props) {
   const [email, setEmail] = useState<string>("");
   const [password, setPassword] = useState<string>("");
   const [loading, setLoading] = useState<boolean>(false);
-
-  const validateEmail = (email: string) => {
-    const re = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    return re.test(email);
-  };
 
   const handleLogin = async () => {
     if (!email.trim() || !password.trim()) {
@@ -48,53 +37,17 @@ export default function LoginScreen({ navigation }: Props) {
 
     setLoading(true);
 
-    try {
-      // Login dengan Firebase Authentication
-      const userCredential = await signInWithEmailAndPassword(
-        auth,
-        email.trim(),
-        password
-      );
+    const result = await loginUser({
+      email: email.trim(),
+      password,
+    });
 
-      // Ambil data user dari Firestore
-      const userDoc = await getDoc(doc(db, "users", userCredential.user.uid));
-      let displayName = userCredential.user.displayName || "User";
+    setLoading(false);
 
-      if (userDoc.exists()) {
-        const userData = userDoc.data();
-        displayName = userData.username || userData.fullName || displayName;
-      }
-
-      // Get auth token
-      const token = await userCredential.user.getIdToken();
-
-      // Simpan user data ke MMKV untuk auto-login
-      saveAuthUser({
-        uid: userCredential.user.uid,
-        email: userCredential.user.email || email,
-        displayName: displayName,
-        token: token,
-      });
-
-      navigation.replace("Chat", { name: displayName });
-    } catch (error: any) {
-      let errorMessage = "Terjadi kesalahan";
-      if (error.code === "auth/invalid-credential") {
-        errorMessage = "Email atau password salah";
-      } else if (error.code === "auth/user-not-found") {
-        errorMessage = "Akun tidak ditemukan. Silakan daftar terlebih dahulu.";
-      } else if (error.code === "auth/wrong-password") {
-        errorMessage = "Password salah";
-      } else if (error.code === "auth/invalid-email") {
-        errorMessage = "Format email tidak valid";
-      } else if (error.code === "auth/network-request-failed") {
-        errorMessage = "Tidak ada koneksi internet";
-      } else if (error.code === "auth/too-many-requests") {
-        errorMessage = "Terlalu banyak percobaan. Coba lagi nanti.";
-      }
-      Alert.alert("Error", errorMessage);
-    } finally {
-      setLoading(false);
+    if (result.success) {
+      navigation.replace("Chat", { name: result.displayName || "User" });
+    } else {
+      Alert.alert("Error", result.error || "Terjadi kesalahan saat login");
     }
   };
 
