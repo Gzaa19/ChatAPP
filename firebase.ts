@@ -17,6 +17,8 @@ import {
   onAuthStateChanged,
   updateProfile,
   signOut,
+  setPersistence,
+  browserLocalPersistence,
 } from "firebase/auth";
 import { createMMKV } from "react-native-mmkv";
 
@@ -38,9 +40,15 @@ export const storage = createMMKV({
   encryptionKey: "chatapp-secure-key-2024",
 });
 
-// Initialize Auth - Firebase akan handle auth state persistence secara internal
-// Warning bisa diabaikan karena kita sudah handle persistence dengan onAuthStateChanged
+// Initialize Auth - Firebase Web SDK di React Native otomatis menggunakan AsyncStorage
+// untuk persistence, jadi auth state akan persist setelah app restart
 const auth = getAuth(app);
+
+// Set persistence ke LOCAL untuk memastikan user tetap login
+setPersistence(auth, browserLocalPersistence).catch((error) => {
+  console.warn("Firebase persistence setup warning:", error);
+  // Ignore error, Firebase akan fallback ke default persistence
+});
 
 export const messagesCollection = collection(
   db,

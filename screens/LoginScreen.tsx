@@ -71,7 +71,7 @@ export default function LoginScreen({ navigation }: Props) {
 
           <View style={styles.formContainer}>
             <CustomInput
-              placeholder="Email"
+              placeholder="Gmail"
               value={email}
               onChangeText={setEmail}
               keyboardType="email-address"
