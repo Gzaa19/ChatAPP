@@ -17,12 +17,21 @@ export default function CustomInput({ style, ...props }: CustomInputProps) {
 
 const styles = StyleSheet.create({
   input: {
-    backgroundColor: "#fff",
+    backgroundColor: "#F7F8FA",
     padding: 16,
-    borderRadius: 8,
+    paddingHorizontal: 18,
+    borderRadius: 12,
     fontSize: 16,
-    borderWidth: 1,
+    borderWidth: 1.5,
     borderColor: "#E9EDEF",
     color: "#111B21",
+    shadowColor: "#000",
+    shadowOffset: {
+      width: 0,
+      height: 1,
+    },
+    shadowOpacity: 0.05,
+    shadowRadius: 2,
+    elevation: 1,
   },
 });

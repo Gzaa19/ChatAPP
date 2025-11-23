@@ -6,6 +6,7 @@ export type LocalMessage = {
   user: string;
   userId: string;
   createdAt: number;
+  imageUrl?: string;
 };
 
 const MESSAGES_KEY = "chat_messages";

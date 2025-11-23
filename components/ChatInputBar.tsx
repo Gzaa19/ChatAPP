@@ -1,15 +1,24 @@
 import React from "react";
 import { View, TextInput, TouchableOpacity, Text, StyleSheet, Platform } from "react-native";
+import Icon from 'react-native-vector-icons/MaterialIcons';
+import Ionicons from 'react-native-vector-icons/Ionicons';
 
 interface ChatInputBarProps {
   message: string;
   onChangeText: (text: string) => void;
   onSend: () => void;
+  onAttachment?: () => void;
 }
 
-export default function ChatInputBar({ message, onChangeText, onSend }: ChatInputBarProps) {
+export default function ChatInputBar({ message, onChangeText, onSend, onAttachment }: ChatInputBarProps) {
   return (
     <View style={styles.inputContainer}>
+      {/* Attachment Button */}
+      <TouchableOpacity style={styles.iconButton} onPress={onAttachment}>
+        <Ionicons name="attach" size={24} color="#A0A0A0" />
+      </TouchableOpacity>
+
+      {/* Input Field */}
       <View style={styles.inputWrapper}>
         <TextInput
           style={styles.input}
@@ -22,14 +31,26 @@ export default function ChatInputBar({ message, onChangeText, onSend }: ChatInpu
           returnKeyType="default"
           blurOnSubmit={false}
         />
+
+        {/* Emoji Button inside input */}
+        <TouchableOpacity style={styles.emojiButton}>
+          <Icon name="emoji-emotions" size={24} color="#667781" />
+        </TouchableOpacity>
       </View>
-      <TouchableOpacity
-        style={styles.sendButton}
-        onPress={onSend}
-        disabled={!message.trim()}
-      >
-        <Text style={styles.sendButtonText}>➤</Text>
-      </TouchableOpacity>
+
+      {/* Send or Voice Button */}
+      {message.trim() ? (
+        <TouchableOpacity
+          style={styles.sendButton}
+          onPress={onSend}
+        >
+          <Ionicons name="send" size={20} color="#FFFFFF" />
+        </TouchableOpacity>
+      ) : (
+        <TouchableOpacity style={styles.voiceButton}>
+          <Ionicons name="send" size={20} color="#FFFFFF" />
+        </TouchableOpacity>
+      )}
     </View>
   );
 }
@@ -37,22 +58,47 @@ export default function ChatInputBar({ message, onChangeText, onSend }: ChatInpu
 const styles = StyleSheet.create({
   inputContainer: {
     flexDirection: "row",
-    padding: 8,
+    padding: 6,
     backgroundColor: "#F0F2F5",
     alignItems: "flex-end",
-    gap: 8,
+    gap: 6,
+    borderTopWidth: 1,
+    borderTopColor: "#E0E0E0",
+  },
+  iconButton: {
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    alignItems: "center",
+    justifyContent: "center",
+    backgroundColor: "transparent",
+  },
+  iconText: {
+    fontSize: 22,
+    color: '#A0A0A0',
   },
   inputWrapper: {
     flex: 1,
-    backgroundColor: "#fff",
-    borderRadius: 24,
-    paddingHorizontal: 16,
-    paddingVertical: Platform.OS === "ios" ? 10 : 8,
-    minHeight: 42,
+    backgroundColor: "#FFFFFF",
+    borderRadius: 22,
+    paddingHorizontal: 14,
+    paddingVertical: Platform.OS === "ios" ? 10 : 6,
+    minHeight: 44,
     maxHeight: 100,
     justifyContent: "center",
+    flexDirection: "row",
+    alignItems: "center",
+    shadowColor: "#000",
+    shadowOffset: {
+      width: 0,
+      height: 1,
+    },
+    shadowOpacity: 0.05,
+    shadowRadius: 2,
+    elevation: 1,
   },
   input: {
+    flex: 1,
     fontSize: 16,
     color: "#111B21",
     maxHeight: 80,
@@ -60,17 +106,53 @@ const styles = StyleSheet.create({
     paddingTop: 0,
     paddingBottom: 0,
   },
+  emojiButton: {
+    paddingLeft: 6,
+    paddingRight: 2,
+  },
+  emojiText: {
+    fontSize: 20,
+  },
   sendButton: {
-    width: 42,
-    height: 42,
-    borderRadius: 21,
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    backgroundColor: "#25D366", // WhatsApp green
+    alignItems: "center",
+    justifyContent: "center",
+    shadowColor: "#25D366",
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.3,
+    shadowRadius: 3,
+    elevation: 3,
+  },
+  sendButtonText: {
+    color: "#FFFFFF",
+    fontSize: 20,
+    fontWeight: "bold",
+  },
+  voiceButton: {
+    width: 44,
+    height: 44,
+    borderRadius: 22,
     backgroundColor: "#25D366",
     alignItems: "center",
     justifyContent: "center",
+    shadowColor: "#25D366",
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.3,
+    shadowRadius: 3,
+    elevation: 3,
   },
-  sendButtonText: {
-    color: "#fff",
-    fontSize: 20,
-    fontWeight: "bold",
+  voiceButtonText: {
+    fontSize: 22,
+    color: '#FFFFFF',
+    fontWeight: 'bold',
   },
 });

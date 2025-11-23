@@ -10,6 +10,7 @@ export default function OfflineBanner({ isOnline }: OfflineBannerProps) {
 
   return (
     <View style={styles.offlineBanner}>
+      <Text style={styles.offlineIcon}>⚠️</Text>
       <Text style={styles.offlineText}>Connecting...</Text>
     </View>
   );
@@ -17,13 +18,22 @@ export default function OfflineBanner({ isOnline }: OfflineBannerProps) {
 
 const styles = StyleSheet.create({
   offlineBanner: {
-    backgroundColor: "#FFC107",
-    padding: 6,
+    backgroundColor: "#FFF3CD",
+    paddingVertical: 8,
+    paddingHorizontal: 12,
     alignItems: "center",
+    flexDirection: "row",
+    justifyContent: "center",
+    gap: 8,
+    borderBottomWidth: 1,
+    borderBottomColor: "#FFE69C",
+  },
+  offlineIcon: {
+    fontSize: 14,
   },
   offlineText: {
-    color: "#111B21",
+    color: "#856404",
     fontSize: 13,
-    fontWeight: "500",
+    fontWeight: "600",
   },
 });

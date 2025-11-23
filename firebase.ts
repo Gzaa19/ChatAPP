@@ -9,9 +9,13 @@ import {
   onSnapshot,
   CollectionReference,
   DocumentData,
+  updateDoc,
+  doc,
 } from "firebase/firestore";
 import {
-  getAuth,
+  initializeAuth,
+  // @ts-ignore - getReactNativePersistence exists but not in type definitions
+  getReactNativePersistence,
   createUserWithEmailAndPassword,
   signInWithEmailAndPassword,
   onAuthStateChanged,
@@ -32,17 +36,37 @@ const firebaseConfig = {
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 
-// Initialize MMKV storage untuk app data (messages, etc)
+// Inisialisasi MMKV untuk penyimpanan lokal
+// Menggunakan createMMKV() untuk react-native-mmkv v4.0+
 export const storage = createMMKV({
   id: "chatapp-storage",
   encryptionKey: "chatapp-secure-key-2024",
 });
 
-// Initialize Auth
-// Firebase Web SDK di React Native OTOMATIS menggunakan @react-native-async-storage/async-storage
-// untuk auth persistence. Tidak perlu setup manual!
-// Auth state akan otomatis persist setelah app restart/refresh
-const auth = getAuth(app);
+// Wrapper agar MMKV terlihat seperti AsyncStorage untuk Firebase Auth
+// Firebase Auth membutuhkan interface dengan getItem, setItem, removeItem
+const MMKVStorage = {
+  getItem: (key: string) => {
+    const value = storage.getString(key);
+    // Firebase mengharapkan Promise, sedangkan MMKV synchronous
+    // Kita bungkus dengan Promise.resolve
+    return Promise.resolve(value ?? null);
+  },
+  setItem: (key: string, value: string) => {
+    storage.set(key, value);
+    return Promise.resolve();
+  },
+  removeItem: (key: string) => {
+    storage.remove(key);
+    return Promise.resolve();
+  },
+};
+
+// Initialize Firebase Auth dengan MMKV persistence
+// PENTING: Gunakan initializeAuth(), BUKAN getAuth()
+const auth = initializeAuth(app, {
+  persistence: getReactNativePersistence(MMKVStorage),
+});
 
 export const messagesCollection = collection(
   db,
@@ -58,6 +82,8 @@ export {
   query,
   orderBy,
   onSnapshot,
+  updateDoc,
+  doc,
   createUserWithEmailAndPassword,
   signInWithEmailAndPassword,
   onAuthStateChanged,

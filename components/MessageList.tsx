@@ -8,6 +8,9 @@ export interface Message {
   user: string;
   userId: string;
   createdAt: { seconds: number; nanoseconds: number } | null;
+  status?: 'sent' | 'delivered' | 'read';
+  readBy?: string[];
+  imageUrl?: string;
 }
 
 interface MessageListProps {
@@ -20,9 +23,9 @@ export default function MessageList({ messages, currentUserId }: MessageListProp
     const isMyMessage = item.userId === currentUserId;
     const timestamp = item.createdAt?.seconds
       ? new Date(item.createdAt.seconds * 1000).toLocaleTimeString("id-ID", {
-          hour: "2-digit",
-          minute: "2-digit",
-        })
+        hour: "2-digit",
+        minute: "2-digit",
+      })
       : "";
 
     return (
@@ -31,6 +34,8 @@ export default function MessageList({ messages, currentUserId }: MessageListProp
         user={item.user}
         timestamp={timestamp}
         isMyMessage={isMyMessage}
+        status={item.status}
+        imageUrl={item.imageUrl}
       />
     );
   };
@@ -42,13 +47,14 @@ export default function MessageList({ messages, currentUserId }: MessageListProp
       renderItem={renderItem}
       contentContainerStyle={styles.messagesList}
       inverted={false}
+      showsVerticalScrollIndicator={false}
     />
   );
 }
 
 const styles = StyleSheet.create({
   messagesList: {
-    padding: 10,
-    paddingBottom: 10,
+    padding: 12,
+    paddingBottom: 16,
   },
 });

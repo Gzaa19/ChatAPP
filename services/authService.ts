@@ -18,7 +18,7 @@ export interface RegisterData {
 }
 
 export interface LoginData {
-  email: string;
+  username: string;
   password: string;
 }
 
@@ -71,22 +71,43 @@ export const registerUser = async (data: RegisterData) => {
 };
 
 /**
- * Login user dengan Firebase Auth
+ * Login user dengan Firebase Auth menggunakan username
  */
 export const loginUser = async (data: LoginData) => {
   try {
-    // 1. Login dengan Firebase Auth
+    // 1. Cari user berdasarkan username di Firestore
+    const { collection, query, where, getDocs } = await import("firebase/firestore");
+    const usersRef = collection(db, "users");
+    const q = query(usersRef, where("username", "==", data.username.trim()));
+    const querySnapshot = await getDocs(q);
+
+    if (querySnapshot.empty) {
+      return {
+        success: false,
+        error: "Username tidak ditemukan",
+      };
+    }
+
+    // 2. Ambil email dari data user
+    const userDoc = querySnapshot.docs[0];
+    const userData = userDoc.data();
+    const userEmail = userData.email;
+
+    if (!userEmail) {
+      return {
+        success: false,
+        error: "Data user tidak valid",
+      };
+    }
+
+    // 3. Login dengan Firebase Auth menggunakan email
     const userCredential = await signInWithEmailAndPassword(
       auth,
-      data.email.trim(),
+      userEmail,
       data.password
     );
 
-    // 2. Ambil data user dari Firestore
-    const userDoc = await getDoc(doc(db, "users", userCredential.user.uid));
-    const userData = userDoc.data();
-
-    // 3. Simpan ke MMKV storage
+    // 4. Simpan ke MMKV storage
     const token = await userCredential.user.getIdToken();
     await saveAuthUser({
       uid: userCredential.user.uid,
@@ -101,14 +122,14 @@ export const loginUser = async (data: LoginData) => {
       displayName: userData?.fullName || userCredential.user.displayName || "",
     };
   } catch (error: any) {
-    let errorMessage = "Email atau password salah";
+    let errorMessage = "Username atau password salah";
 
     if (error.code === "auth/user-not-found") {
       errorMessage = "User tidak ditemukan";
     } else if (error.code === "auth/wrong-password") {
       errorMessage = "Password salah";
-    } else if (error.code === "auth/invalid-email") {
-      errorMessage = "Format email tidak valid";
+    } else if (error.code === "auth/invalid-credential") {
+      errorMessage = "Username atau password salah";
     } else if (error.code === "auth/too-many-requests") {
       errorMessage = "Terlalu banyak percobaan login. Coba lagi nanti";
     }
