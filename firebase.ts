@@ -36,20 +36,14 @@ const firebaseConfig = {
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 
-// Inisialisasi MMKV untuk penyimpanan lokal
-// Menggunakan createMMKV() untuk react-native-mmkv v4.0+
 export const storage = createMMKV({
   id: "chatapp-storage",
   encryptionKey: "chatapp-secure-key-2024",
 });
 
-// Wrapper agar MMKV terlihat seperti AsyncStorage untuk Firebase Auth
-// Firebase Auth membutuhkan interface dengan getItem, setItem, removeItem
 const MMKVStorage = {
   getItem: (key: string) => {
     const value = storage.getString(key);
-    // Firebase mengharapkan Promise, sedangkan MMKV synchronous
-    // Kita bungkus dengan Promise.resolve
     return Promise.resolve(value ?? null);
   },
   setItem: (key: string, value: string) => {
@@ -62,8 +56,6 @@ const MMKVStorage = {
   },
 };
 
-// Initialize Firebase Auth dengan MMKV persistence
-// PENTING: Gunakan initializeAuth(), BUKAN getAuth()
 const auth = initializeAuth(app, {
   persistence: getReactNativePersistence(MMKVStorage),
 });
