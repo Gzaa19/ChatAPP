@@ -1,97 +1,118 @@
-This is a new [**React Native**](https://reactnative.dev) project, bootstrapped using [`@react-native-community/cli`](https://github.com/react-native-community/cli).
+# ChatME - React Native Chat Application
 
-# Getting Started
+ChatME adalah aplikasi obrolan real-time yang dibangun menggunakan React Native dan Firebase. Aplikasi ini menawarkan antarmuka modern, autentikasi pengguna yang aman, dan penyimpanan lokal yang efisien untuk pengalaman pengguna yang mulus.
 
-> **Note**: Make sure you have completed the [Set Up Your Environment](https://reactnative.dev/docs/set-up-your-environment) guide before proceeding.
+## Fitur Utama
 
-## Step 1: Start Metro
+- **Real-time Messaging**: Kirim dan terima pesan secara instan menggunakan Firebase Firestore.
+- **Autentikasi Pengguna**: Login dan Registrasi aman dengan Firebase Authentication.
+- **Penyimpanan Lokal Persisten**: Menggunakan MMKV untuk menyimpan sesi login, memungkinkan fitur auto-login yang cepat.
+- **Dukungan Offline**: Banner notifikasi saat perangkat kehilangan koneksi internet.
+- **Antarmuka Modern**: Desain UI yang bersih dan responsif mirip dengan aplikasi chat populer.
+- **Navigasi Mulus**: Menggunakan React Navigation untuk transisi antar layar yang halus.
 
-First, you will need to run **Metro**, the JavaScript build tool for React Native.
+## Teknologi yang Digunakan
 
-To start the Metro dev server, run the following command from the root of your React Native project:
+- **Core**: [React Native](https://reactnative.dev/) (v0.82), [TypeScript](https://www.typescriptlang.org/)
+- **Backend & Auth**: [Firebase](https://firebase.google.com/) (Authentication & Firestore)
+- **State & Storage**: [React Native MMKV](https://github.com/miouss/react-native-mmkv) (High performance storage)
+- **Navigation**: [React Navigation](https://reactnavigation.org/) (Native Stack)
+- **Icons**: [React Native Vector Icons](https://github.com/oblador/react-native-vector-icons)
+- **Media**: [React Native Image Picker](https://github.com/react-native-image-picker/react-native-image-picker)
 
-```sh
-# Using npm
-npm start
+## Prasyarat Instalasi
 
-# OR using Yarn
-yarn start
+Sebelum memulai, pastikan Anda telah menginstal:
+
+- [Node.js](https://nodejs.org/) (versi LTS disarankan, >= 20)
+- [JDK](https://www.oracle.com/java/technologies/javase-downloads.html) (Java Development Kit)
+- [Android Studio](https://developer.android.com/studio) (untuk pengembangan Android)
+- [Xcode](https://developer.apple.com/xcode/) (untuk pengembangan iOS, hanya macOS)
+- React Native CLI environment yang sudah dikonfigurasi.
+
+## Instalasi dan Menjalankan Project
+
+1. **Clone repositori ini**
+   ```bash
+   git clone https://github.com/username/ChatApp.git
+   cd ChatApp
+   ```
+
+2. **Instal dependensi**
+   ```bash
+   npm install
+   # atau
+   yarn install
+   ```
+
+3. **Konfigurasi Firebase**
+   - Buat project di Firebase Console.
+   - Aktifkan Authentication (Email/Password) dan Firestore Database.
+   - Salin konfigurasi Firebase Anda ke dalam file `firebase.ts` (pastikan file ini ada dan dikonfigurasi dengan benar).
+
+4. **Jalankan Aplikasi**
+
+   Start Metro Bundler:
+   ```bash
+   npm start
+   ```
+
+   Untuk Android:
+   ```bash
+   npm run android
+   ```
+
+   Untuk iOS (macOS only):
+   ```bash
+   cd ios && pod install && cd ..
+   npm run ios
+   ```
+
+## 📂 Susunan Project
+
+```text
+ChatApp/
+├── components/         # Komponen UI yang dapat digunakan kembali (ChatInput, MessageList, dll)
+├── hooks/              # Custom React Hooks (useAuth, dll)
+├── screens/            # Layar utama aplikasi (Login, Register, Chat)
+├── services/           # Layanan eksternal atau API calls
+├── utils/              # Fungsi utilitas dan helper (authStorage, dll)
+├── App.tsx             # Entry point aplikasi dan konfigurasi navigasi
+├── firebase.ts         # Konfigurasi dan inisialisasi Firebase
+└── package.json        # Daftar dependensi project
 ```
 
-## Step 2: Build and run your app
+## Contoh Penggunaan
 
-With Metro running, open a new terminal window/pane from the root of your React Native project, and use one of the following commands to build and run your Android or iOS app:
+1. **Registrasi**: Buka aplikasi, pilih "Register", masukkan nama, email, dan password untuk membuat akun baru.
+2. **Login**: Jika sudah punya akun, masuk menggunakan email dan password.
+3. **Chatting**: Setelah login, Anda akan diarahkan ke Chat Room. Ketik pesan di bar input dan tekan kirim. Pesan akan muncul secara real-time.
+4. **Logout**: (Jika fitur tersedia di UI) Gunakan tombol logout untuk keluar dan menghapus sesi lokal.
 
-### Android
+## Lisensi
 
-```sh
-# Using npm
-npm run android
+Project ini dilisensikan di bawah lisensi **MIT**.
 
-# OR using Yarn
-yarn android
+```text
+MIT License
+
+Copyright (c) 2025 ChatApp Contributors
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
 ```
-
-### iOS
-
-For iOS, remember to install CocoaPods dependencies (this only needs to be run on first clone or after updating native deps).
-
-The first time you create a new project, run the Ruby bundler to install CocoaPods itself:
-
-```sh
-bundle install
-```
-
-Then, and every time you update your native dependencies, run:
-
-```sh
-bundle exec pod install
-```
-
-For more information, please visit [CocoaPods Getting Started guide](https://guides.cocoapods.org/using/getting-started.html).
-
-```sh
-# Using npm
-npm run ios
-
-# OR using Yarn
-yarn ios
-```
-
-If everything is set up correctly, you should see your new app running in the Android Emulator, iOS Simulator, or your connected device.
-
-This is one way to run your app — you can also build it directly from Android Studio or Xcode.
-
-## Step 3: Modify your app
-
-Now that you have successfully run the app, let's make changes!
-
-Open `App.tsx` in your text editor of choice and make some changes. When you save, your app will automatically update and reflect these changes — this is powered by [Fast Refresh](https://reactnative.dev/docs/fast-refresh).
-
-When you want to forcefully reload, for example to reset the state of your app, you can perform a full reload:
-
-- **Android**: Press the <kbd>R</kbd> key twice or select **"Reload"** from the **Dev Menu**, accessed via <kbd>Ctrl</kbd> + <kbd>M</kbd> (Windows/Linux) or <kbd>Cmd ⌘</kbd> + <kbd>M</kbd> (macOS).
-- **iOS**: Press <kbd>R</kbd> in iOS Simulator.
-
-## Congratulations! :tada:
-
-You've successfully run and modified your React Native App. :partying_face:
-
-### Now what?
-
-- If you want to add this new React Native code to an existing application, check out the [Integration guide](https://reactnative.dev/docs/integration-with-existing-apps).
-- If you're curious to learn more about React Native, check out the [docs](https://reactnative.dev/docs/getting-started).
-
-# Troubleshooting
-
-If you're having issues getting the above steps to work, see the [Troubleshooting](https://reactnative.dev/docs/troubleshooting) page.
-
-# Learn More
-
-To learn more about React Native, take a look at the following resources:
-
-- [React Native Website](https://reactnative.dev) - learn more about React Native.
-- [Getting Started](https://reactnative.dev/docs/environment-setup) - an **overview** of React Native and how setup your environment.
-- [Learn the Basics](https://reactnative.dev/docs/getting-started) - a **guided tour** of the React Native **basics**.
-- [Blog](https://reactnative.dev/blog) - read the latest official React Native **Blog** posts.
-- [`@facebook/react-native`](https://github.com/facebook/react-native) - the Open Source; GitHub **repository** for React Native.
